@@ -1,0 +1,10 @@
+{
+  "name": "uz-kontent-agent",
+  "description": "YouTube, Reels/Shorts/TikTok va Telegram uchun 12 ta o'zbekcha skill: baholanadigan hook bilan ssenariy, sarlavha va muqova tekshiruvi, o'zbekcha parazit so'zlarni topadigan montaj ro'yxati, bitta videodan uch platformaga moslash, retention tahlili, lotin-kirill va yozilish variantlari. Yo'nalish: kompyuter va sun'iy intellekt bo'yicha amaliy darslar.",
+  "version": "1.0.0",
+  "author": { "name": "Jaxa7775", "url": "https://github.com/Jaxa7775" },
+  "homepage": "https://github.com/Jaxa7775/uz-kontent-agent",
+  "repository": "https://github.com/Jaxa7775/uz-kontent-agent",
+  "license": "MIT",
+  "keywords": ["uzbek", "ozbek", "youtube", "telegram", "reels", "tiktok", "shorts", "content"]
+}

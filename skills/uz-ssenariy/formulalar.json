@@ -1,0 +1,157 @@
+{
+ "versiya": "1.0",
+ "izoh": "18 ta hook formulasi, o'zbek tilida, 'Kompyuter va sun'iy intellekt' yo'nalishiga moslangan misollar bilan. Hook — birinchi 15 soniya (qisqa videoda birinchi 2 soniya). U uch ishni qiladi: sarlavha va'dasini tasdiqlaydi, tomoshabin o'zi yopa olmaydigan savol ochadi va natija borligini isbotlaydi. 'naqsh' maydonlari hook_baho.py uchun: matn avval lotinga o'giriladi, kichik harfga tushiriladi va barcha tutuq belgilari ' ga almashtiriladi.",
+ "qoidalar": [
+  "Birinchi gap sarlavhani tasdiqlasin. Sarlavhasini unutgan hook — tomoshabin 0:08 da ketishining sababi.",
+  "Bitta g'oya. Ikki va'da bergan hook ikkalasini ham bajarmaydi.",
+  "Aniq — kattadan kuchli. 'Excel faylni 3 soniyada tozalash' — 'Excel bo'yicha zo'r usul' dan yaxshi.",
+  "Natijani 20 soniya ichida ekranda ko'rsating, agar va'da bergan bo'lsangiz.",
+  "Uzun salomlashish va 'kanalga obuna bo'ling' bilan boshlamang. Obuna hali topilmagan."
+ ],
+ "formulalar": [
+  {
+   "id": "raqam",
+   "nomi": "Raqam",
+   "shakl": "Tomoshabin bilmagan aniq raqam, keyin uning oqibati.",
+   "misol": "Kompyuteringiz yonganda 14 ta dastur o'zi ishga tushadi. Ulardan faqat 2 tasi kerak.",
+   "qachon_ishlamaydi": "Raqam taxminiy yoki tekshirib bo'lmaydigan bo'lsa. Raqamni o'zingiz ekranda ko'rsating.",
+   "naqsh": ["\\d+\\s?(%|foiz)", "\\d+ (tadan|ta) \\d+", "\\b\\d+ tasi\\b"]
+  },
+  {
+   "id": "xato",
+   "nomi": "Siz qilayotgan xato",
+   "shakl": "Tomoshabin hozir qilayotgan xatoni nomlang.",
+   "misol": "Siz Word'da jadvalni Space bosib tekislayapsiz. Shuning uchun chop etganda hammasi siljiydi.",
+   "qachon_ishlamaydi": "Xato keng tarqalgan bo'lmasa yoki tomoshabin uni bir soniyada tekshira olmasa.",
+   "naqsh": ["\\bxato\\w*", "\\bnoto'g'ri\\b", "\\b\\w+(yapsiz|yapsizmi)\\b"]
+  },
+  {
+   "id": "teskari-fikr",
+   "nomi": "Teskari fikr",
+   "shakl": "Hamma biladigan maslahatni ayting, keyin uni rad eting.",
+   "misol": "Hamma kompyuter sekinlashsa Windows'ni qayta o'rnating deydi. Aslida 5 daqiqalik sozlash yetarli.",
+   "qachon_ishlamaydi": "Keyingi 15 soniyada isbot bo'lmasa, shunchaki qarshi gapirish bo'lib qoladi.",
+   "naqsh": ["\\bhamma (aytadi|deydi|o'ylaydi|maslahat)", "\\baslida\\b", "\\bunday emas\\b"]
+  },
+  {
+   "id": "korsataman",
+   "nomi": "Ko'rsataman",
+   "shakl": "Aniq bir narsani ko'rsatishni va'da qiling va darhol ko'rsating.",
+   "misol": "Hozir ekranda ChatGPT'ga dars rejasini yozdiradigan aniq so'rovni ko'rsataman.",
+   "qachon_ishlamaydi": "Ko'rsatish 5-daqiqaga qolsa, 1-daqiqada tomoshabin ketadi.",
+   "naqsh": ["\\bko'rsataman\\b", "\\bmana (shu|bu)\\b", "\\bekranda\\b"]
+  },
+  {
+   "id": "vaqt",
+   "nomi": "Vaqt chegarasi",
+   "shakl": "Natijani vaqt bilan cheklang.",
+   "misol": "Keyingi 3 daqiqada telefoningizdagi rasmni Word hujjatiga aylantirasiz.",
+   "qachon_ishlamaydi": "Vaqt rost bo'lishi shart. Oshirib yuborsangiz, keyingi hookingizga ishonishmaydi.",
+   "naqsh": ["\\b\\d+ (soniya|sekund|daqiqa|minut|soat)(da|ichida)\\b", "\\bvideo oxirigacha\\b", "\\bkeyingi \\d+\\b"]
+  },
+  {
+   "id": "sinab-kordim",
+   "nomi": "Sinab ko'rdim",
+   "shakl": "O'zingiz o'tkazgan tajriba va uning narxi.",
+   "misol": "Bir hafta davomida dars rejalarini faqat sun'iy intellektga yozdirdim. Mana nima chiqdi.",
+   "qachon_ishlamaydi": "Haqiqiy narx — vaqt, pul yoki xavf — bo'lmasa, qiziq emas.",
+   "naqsh": ["\\bsinab ko'rdim\\b", "\\b(sinadim|tekshirdim|tajriba)\\b", "\\b\\d+ (kun|hafta|oy) davomida\\b"]
+  },
+  {
+   "id": "savol",
+   "nomi": "Savol",
+   "shakl": "Tomoshabin qidiruvga yozgan aynan o'sha savolni bering.",
+   "misol": "Nega printer ulangan bo'lsa ham 'oflayn' deb ko'rsatadi?",
+   "qachon_ishlamaydi": "Savol sizniki emas, tomoshabinniki bo'lishi kerak. Uni izohlardan oling.",
+   "naqsh": ["^(nega|nimaga|nima uchun|qanday|qanaqa|qaysi|qachon)\\b", "\\?\\s*$"]
+  },
+  {
+   "id": "oldin-keyin",
+   "nomi": "Oldin va keyin",
+   "shakl": "Ikki holat, o'rtasida bitta kesish.",
+   "misol": "Bu kompyuter 3 daqiqada yonardi. Endi 25 soniyada yonadi. Hech narsa sotib olmadim.",
+   "qachon_ishlamaydi": "Faqat ko'rinadigan natija bilan ishlaydi.",
+   "naqsh": ["\\boldin\\b.*\\b(keyin|endi|hozir)\\b", "\\b\\w+(ardi|ardim|gan edi)\\b.*\\bendi\\b"]
+  },
+  {
+   "id": "royxat",
+   "nomi": "Ro'yxat",
+   "shakl": "Sanalgan to'plam, son birinchi gapda.",
+   "misol": "Excel'da har kuni ishlatiladigan 5 ta tugmalar birikmasi.",
+   "qachon_ishlamaydi": "Son aniq bo'lishi va har bir band boshqa turdagi foyda berishi kerak.",
+   "naqsh": ["^\\d+ (ta|usul|xato|sabab|maslahat|qadam)\\b", "\\b\\d+ ta \\w+"]
+  },
+  {
+   "id": "ogohlantirish",
+   "nomi": "Ogohlantirish",
+   "shakl": "Tomoshabin to'lashi mumkin bo'lgan narxni ayting.",
+   "misol": "Ushbu tugmani bosmaguningizcha hech qanday fleshkani kompyuterga ulamang.",
+   "qachon_ishlamaydi": "Xavf kichik bo'lsa, hook yolg'onga aylanadi. Kam ishlating.",
+   "naqsh": ["\\b\\w+(mang|mangiz)\\b", "\\behtiyot\\w*", "\\boldin\\b.*\\btekshiring\\b", "\\bxavf\\w*"]
+  },
+  {
+   "id": "yashirin",
+   "nomi": "Ko'pchilik bilmaydi",
+   "shakl": "Tizim ichidagi, ko'pchilik ochmaydigan imkoniyat.",
+   "misol": "Windows'da kompyuteringiz qaysi dasturga eng ko'p vaqt sarflashini ko'rsatadigan oyna bor. Uni deyarli hech kim ochmaydi.",
+   "qachon_ishlamaydi": "Bilmaydigan narsangizni bilaman deb da'vo qilmang.",
+   "naqsh": ["\\b(hech kim|ko'pchilik|deyarli hech kim) (bilmaydi|ochmaydi|ishlatmaydi)", "\\byashirin\\b", "\\bbilmagan\\b"]
+  },
+  {
+   "id": "imkonsiz",
+   "nomi": "Imkonsizdek da'vo",
+   "shakl": "Rostga o'xshamaydigan gap, keyin isbot.",
+   "misol": "Bitta ham formula yozmasdan Excel'da 1000 qatorli hisobot tayyorlaysiz.",
+   "qachon_ishlamaydi": "Isbot 20 soniya ichida boshlanmasa, aldov bo'lib ko'rinadi.",
+   "naqsh": ["\\bbepul\\b", "\\b\\w+masdan\\b", "\\bhech qanday\\b", "\\bbitta ham\\b"]
+  },
+  {
+   "id": "taqqoslash",
+   "nomi": "Taqqoslash",
+   "shakl": "Ikki nomlangan variant, bitta g'olib.",
+   "misol": "Bitta vazifani ChatGPT va Claude'ga berdim. Biri 2 daqiqada, ikkinchisi umuman bajarmadi.",
+   "qachon_ishlamaydi": "Yutqazganni ham ochiq ayting. Yutqazuvchisiz taqqoslash — reklama.",
+   "naqsh": ["\\bvs\\.?\\b", "\\bqaysi (biri|biridan)\\b", "\\bfarqi\\b", "\\b\\w+ (yoki|va) \\w+ga berdim\\b"]
+  },
+  {
+   "id": "isbot",
+   "nomi": "Isbot",
+   "shakl": "Avval natijani ko'rsating, keyin tushuntiring.",
+   "misol": "Mana bu jadvalni sun'iy intellekt 40 soniyada tuzdi. Endi qanday qilganini ko'rsataman.",
+   "qachon_ishlamaydi": "Haqiqiy ekran tasviri kerak. Gapirib berilgan isbot — isbot emas.",
+   "naqsh": ["\\bmana (natija|bu)\\b", "\\bisbot\\b", "\\bskrinshot\\b"]
+  },
+  {
+   "id": "murojaat",
+   "nomi": "To'g'ridan-to'g'ri murojaat",
+   "shakl": "Aynan kimga gapirayotganingizni birinchi besh so'zda ayting.",
+   "misol": "Agar siz o'qituvchi bo'lsangiz va har hafta test tuzsangiz, bu video sizga 2 soat tejaydi.",
+   "qachon_ishlamaydi": "Tor auditoriya kengdan yaxshi. 'Kompyuterdan foydalanadiganlar' — hech kim degani.",
+   "naqsh": ["^agar siz\\b", "\\bkimki\\b", "\\b(o'qituvchi|talaba|o'quvchi|abituriyent|ota-ona|hisobchi)(lar)? uchun\\b"]
+  },
+  {
+   "id": "yangilik",
+   "nomi": "Yangilik",
+   "shakl": "Biror narsa o'zgardi yoki o'zgaryapti.",
+   "misol": "Windows 10'ni qo'llab-quvvatlash tugadi. Kompyuteringiz uchun bu nimani anglatadi?",
+   "qachon_ishlamaydi": "Faqat haqiqiy, tekshirsa bo'ladigan sana bilan. Ishonchni eng tez yo'qotadigan formula.",
+   "naqsh": ["\\b(bu|keyingi) (hafta|oy|yil)\\b", "\\b(o'zgardi|tugadi|chiqdi)\\b", "\\bendi \\w+ (yo'q|bo'lmaydi)\\b", "\\byangi\\b"]
+  },
+  {
+   "id": "tejash",
+   "nomi": "Tejash",
+   "shakl": "Tomoshabinga qancha vaqt yoki pul tejalishini ayting.",
+   "misol": "Har kuni 20 daqiqa ketadigan hisobotni bitta tugma bilan tayyorlaymiz.",
+   "qachon_ishlamaydi": "Tejash raqami o'zingiz o'lchagan bo'lishi kerak.",
+   "naqsh": ["\\btejay\\w*", "\\btejash\\w*", "\\btezroq\\b", "\\btezlashtir\\w*", "\\bbitta tugma\\b"]
+  },
+  {
+   "id": "muammo-yechim",
+   "nomi": "Muammo va yechim",
+   "shakl": "Tanish muammo, keyin yechim borligini ayting.",
+   "misol": "Kompyuteringiz qotib qolyaptimi? Sabab ko'pincha bitta sozlamada.",
+   "qachon_ishlamaydi": "Yechim videoda haqiqatan bo'lishi va tez kelishi kerak.",
+   "naqsh": ["\\b(sekin|qotib|ishlamay|ochilmay|buzil|o'chib)\\w*", "\\b(yechim|hal qil|tuzat)\\w*"]
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "uz-kontent-agent",
+  "description": "O'zbekcha kontent agenti - Claude uchun skill'lar to'plami",
+  "owner": { "name": "Jaxa7775", "url": "https://github.com/Jaxa7775" },
+  "plugins": [
+    {
+      "name": "uz-kontent-agent",
+      "description": "YouTube, Reels/Shorts/TikTok va Telegram uchun 12 ta o'zbekcha skill va 7 ta vosita.",
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://github.com/Jaxa7775/uz-kontent-agent"
+    }
+  ]
+}
