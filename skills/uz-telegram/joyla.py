@@ -8,9 +8,12 @@
     python joyla.py post.txt --ovoz ovoz.mp3        # ovozli xabar, matn izoh bo'ladi (OGG/Opus, MP3, M4A)
     python joyla.py post.txt --yubor                # HAQIQATAN yuborish
     python joyla.py post.txt --yubor --ovozsiz      # obunachilarga bildirishnomasiz
+    python joyla.py post.txt --kanal @boshqa_kanal  # standart kanal o'rniga boshqasiga
 
 Sozlamalar ~/.claude/kontent-uz/telegram.json da:
-    {"kanal": "@kanal_nomi", "token_fayl": "C:/yo'l/bot_token.txt"}
+    {"kanal": "@standart_kanal", "kanallar": ["@standart_kanal", "@ikkinchi_kanal"],
+     "token_fayl": "C:/yo'l/bot_token.txt"}
+"kanallar" ixtiyoriy: --tekshir ularning hammasini tekshiradi.
 yoki muhit o'zgaruvchilarida: TELEGRAM_BOT_TOKEN, TELEGRAM_KANAL.
 Bot kanalda "Xabar joylash" huquqi bilan admin bo'lishi kerak (--tekshir buni ko'rsatadi).
 Token hech qachon ekranga chiqarilmaydi.
@@ -67,6 +70,14 @@ def sozlamalar():
                     m = re.search(r"\d{5,}:[A-Za-z0-9_-]{30,}", f.read())
                 token = m.group(0) if m else None
     return kanal_nomi(kanal), token
+
+
+def kanallar_royxati():
+    if not os.path.exists(SOZLAMA):
+        return []
+    with open(SOZLAMA, encoding="utf-8-sig") as f:
+        c = json.load(f)
+    return [k for k in (kanal_nomi(x) for x in c.get("kanallar", [])) if k]
 
 
 # --- format: oddiy belgilash -> Telegram HTML --------------------------------------------------
@@ -203,10 +214,22 @@ def main():
         if "--" + tur in a:
             i = a.index("--" + tur); tanlangan.append((tur, a[i + 1])); del a[i:i + 2]
     media = tanlangan[0] if tanlangan else None
+    kanal_arg = None
+    if "--kanal" in a:
+        i = a.index("--kanal"); kanal_arg = kanal_nomi(a[i + 1]); del a[i:i + 2]
     kanal, token = sozlamalar()
+    if kanal_arg:
+        kanal = kanal_arg
     try:
         if "--tekshir" in a:
-            print(); kod = tekshir(kanal, token); print(); sys.exit(kod)
+            if kanal_arg or os.environ.get("TELEGRAM_KANAL"):
+                royxat = [kanal]
+            else:
+                royxat = list(dict.fromkeys([k for k in [kanal] + kanallar_royxati() if k])) or [kanal]
+            kod = 0
+            for k in royxat:
+                print(); kod |= tekshir(k, token)
+            print(); sys.exit(kod)
         if not a or not os.path.exists(a[0]):
             print(__doc__); sys.exit(1)
         if len(tanlangan) > 1:
@@ -235,7 +258,8 @@ def main():
                 print("  | " + q)
             print("  ---------------------------------------------------------------------")
             print(f"\n  Yuborish uchun: python joyla.py {a[0]}"
-                  + (f" --{media[0]} {media[1]}" if media else "") + " --yubor\n")
+                  + (f" --{media[0]} {media[1]}" if media else "")
+                  + (f" --kanal {kanal}" if kanal_arg else "") + " --yubor\n")
             return
         if not token or not kanal:
             print("  x  token yoki kanal yo'q - avval: python joyla.py --tekshir"); sys.exit(1)

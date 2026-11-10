@@ -284,6 +284,14 @@ class Joyla(Tmp):
         self.assertIn('"Sarlavha qatori"', out)
         self.assertNotIn("A" * 35, out)
 
+    def test_kanal_bayrogi(self):
+        env = dict(os.environ, TELEGRAM_KANAL="@birinchi", TELEGRAM_BOT_TOKEN="123456:" + "A" * 35)
+        p = subprocess.run([sys.executable, os.path.join(S, "uz-telegram", "joyla.py"),
+                            self.w("p.txt", "Matn"), "--kanal", "https://t.me/ikkinchi"], capture_output=True, env=env)
+        out = p.stdout.decode("utf-8")
+        self.assertIn("@ikkinchi", out)
+        self.assertIn("--kanal @ikkinchi --yubor", out)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)
