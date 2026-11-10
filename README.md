@@ -97,7 +97,7 @@ shuni o'qiydi. Bu yerda ayniqsa muhim, chunki so'zlarni kamerada ovoz chiqarib a
 | `/uz-trend` | Yo'nalishda nima ishlayapti - har bir kanalning o'z medianasiga karralik bo'yicha. |
 | `/uz-audit` | Uchala platforma, oxirida yigirmata emas, BITTA tuzatish. |
 
-## Sakkizta vosita
+## To'qqizta vosita
 
 Hammasi toza Python 3 da, qo'shimcha kutubxonasiz ishlaydi. Skill'lar shunchaki so'rov emas -
 sababi shular. (Windows'da `python`, macOS/Linux'da `python3`.)
@@ -111,6 +111,7 @@ python skills/uz-seo/imlo.py --variant "o'qituvchi"                 # yozilish v
 python skills/uz-tahlil/retention.py video.csv --davomiylik 600     # tomoshabin qayerda ketdi
 python skills/uz-trend/trend.py yigilgan.json --min 2.0             # o'z kanaliga nisbatan saralash
 python skills/uz-telegram/joyla.py post.txt                         # Telegram: ko'rib chiqish (--yubor bilan yuboradi)
+python skills/uz-telegram/navbatga.py post.txt --vaqt "2026-11-12 19:00"  # rejali joylash navbatiga
 ```
 
 ### Telegram kanalga joylash
@@ -129,6 +130,22 @@ Sozlash:
 
 `--yubor` bo'lmasa hech narsa yuborilmaydi - faqat ko'rib chiqish. Token repoda ham, ekranda ham
 ko'rinmaydi.
+
+### Rejali joylash - bepul server (GitHub Actions)
+
+Kompyuter o'chiq bo'lsa ham postlar belgilangan vaqtda chiqishi uchun:
+
+1. [`templates/kanal-navbat/`](templates/kanal-navbat/) ni yangi **yopiq (private)** repoga
+   ko'chiring, `skills/uz-telegram/joyla.py` ni o'sha repodagi `tools/joyla.py` ga qo'ying.
+2. Repo -> Settings -> Secrets and variables -> Actions: secret `TELEGRAM_BOT_TOKEN`, variable
+   `TELEGRAM_KANAL`.
+3. Repo nusxasining kompyuterdagi yo'lini `telegram.json` ga yozing: `"navbat_papka": "..."`,
+   `"vaqt_zonasi": "+05:00"`.
+4. `python skills/uz-telegram/navbatga.py post.txt --vaqt "2026-11-12 19:00"`
+
+GitHub har soatda tekshiradi; yopiq repoda bu oyiga taxminan 720 daqiqa (bepul chegara 2000).
+Kechikkan (6 soatdan ortiq) post yuborilmaydi, xato bergani qayta urinilmaydi - kanalga eskirgan
+yoki takroriy post chiqmaydi.
 
 YouTube, Instagram va TikTok'ga avtomatik joylash yo'q: YouTube API orqali tekshiruvdan o'tmagan
 loyihalar yuklagan videolar "private" holatda qulflanadi, Instagram va TikTok API'lari esa biznes

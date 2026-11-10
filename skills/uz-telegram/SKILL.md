@@ -91,6 +91,26 @@ Qat'iy tartib:
 Kanalga chiqqan postni hamma ko'radi. Xato post o'chirilsa ham, obunachilarga bildirishnoma ketib
 bo'lgan bo'ladi.
 
+## Rejali joylash (kompyuter o'chiq bo'lsa ham)
+
+Foydalanuvchi navbat reposini sozlagan bo'lsa (`telegram.json` dagi `navbat_papka`, shablon:
+`templates/kanal-navbat/`), postni belgilangan vaqtga navbatga qo'yish mumkin. GitHub Actions har
+soatda (`:07`, UTC) tekshiradi va vaqti kelganini joylaydi.
+
+```bash
+python navbatga.py post.txt --vaqt "2026-11-12 19:00" [--ovoz o.mp3 | --rasm r.jpg | --fayl f.xlsx]
+python navbatga.py --royxat          # navbat, oxirgi joylanganlar, xatolar
+python navbatga.py --bekor <id>      # joylanmaguncha olib tashlash
+```
+
+- Navbatga qo'yish = joylashga tasdiq. Avval `joyla.py` bilan ko'rib chiqishni ko'rsating, keyin
+  foydalanuvchi AYNAN SHU post va SHU vaqtga "ha" desa, navbatga qo'ying.
+- Vaqt foydalanuvchining mahalliy vaqti (`vaqt_zonasi`, standart Toshkent +05:00). Soat boshiga
+  qo'yishni tavsiya qiling: post taxminan 5-40 daqiqa kechikib chiqadi.
+- Matnda "bugun", "hozir" kabi so'zlar bo'lsa, ular joylanish kuniga to'g'ri kelishini tekshiring.
+- Vaqtidan 6 soatdan ko'p kechikkan post yuborilmaydi (`kechikkan/`), xato bergani qayta urinilmaydi
+  (`xato/`). `--royxat` bularni ko'rsatadi.
+
 ## Darvoza
 
 Bu skill foydalanuvchi tasdiqlamaguncha hech narsani joylamaydi. Har bir natija foydalanuvchi nusxa

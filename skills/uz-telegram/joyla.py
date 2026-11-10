@@ -204,9 +204,38 @@ def reja_tuz(matn, media=None):
     return h, n, [(metod, nom + " (izohsiz)"), ("sendMessage", "matn")]
 
 
+def yubor(token, kanal, matn, media=None, ovozsiz=False):
+    """Postni kanalga yuboradi va havolalar ro'yxatini qaytaradi.
+    Xatoda TgXato ko'tariladi; yarim yo'lda to'xtasa, allaqachon ketganlari e.yuborilgan da."""
+    h, n, qadamlar = reja_tuz(matn, media)
+    if n > MATN_CHEGARA:
+        raise TgXato(f"post {n} belgi - {MATN_CHEGARA} dan uzun")
+    havolalar = []
+    for metod, _ in qadamlar:
+        maydon, fayllar = {"chat_id": kanal}, None
+        if metod == "sendMessage":
+            maydon.update({"text": h, "parse_mode": "HTML"})
+        else:
+            fayllar = {MEDIA[media[0]][1]: media[1]}
+            if len(qadamlar) == 1:
+                maydon.update({"caption": h, "parse_mode": "HTML"})
+        if ovozsiz:
+            maydon["disable_notification"] = "true" if fayllar else True
+        try:
+            r = api(token, metod, maydon, fayllar)
+        except TgXato as e:
+            e.yuborilgan = havolalar
+            raise
+        if metod == "sendVoice" and "voice" not in r:
+            print("  !  Telegram buni ovozli xabar sifatida emas, oddiy audio/fayl sifatida qabul qildi")
+        mid = r["message_id"]
+        havolalar.append(f"https://t.me/{kanal[1:]}/{mid}" if kanal.startswith("@") else str(mid))
+    return havolalar
+
+
 def main():
     a = sys.argv[1:]
-    yubor = "--yubor" in a
+    yuborish = "--yubor" in a
     ovozsiz = "--ovozsiz" in a
     a = [x for x in a if x not in ("--yubor", "--ovozsiz")]
     def qiymat(kalit):
@@ -244,7 +273,7 @@ def main():
             matn = f.read().strip("\n")
         h, n, qadamlar = reja_tuz(matn, media)
         birinchi = korinadigan(h).splitlines()[0] if matn else ""
-        sarlavha = "YUBORILMOQDA" if yubor else "KO'RIB CHIQISH - hech narsa yuborilmadi"
+        sarlavha = "YUBORILMOQDA" if yuborish else "KO'RIB CHIQISH - hech narsa yuborilmadi"
         print(f"\n  {sarlavha}")
         kanal_k = kanal or "(ko'rsatilmagan)"
         print(f"  kanal:          {kanal_k}")
@@ -256,7 +285,7 @@ def main():
         print(f'  birinchi qator: "{birinchi[:80]}"')
         if n > MATN_CHEGARA:
             print(f"\n  x  post {MATN_CHEGARA} belgidan uzun - ikkiga bo'ling"); sys.exit(1)
-        if not yubor:
+        if not yuborish:
             print("\n  ---- kanalda ko'rinadigan matn (format belgilari olib tashlangan) ----")
             for q in korinadigan(h).splitlines():
                 print("  | " + q)
@@ -267,22 +296,7 @@ def main():
             return
         if not token or not kanal:
             print("  x  token yoki kanal yo'q - avval: python joyla.py --tekshir"); sys.exit(1)
-        havolalar = []
-        for metod, _ in qadamlar:
-            maydon, fayllar = {"chat_id": kanal}, None
-            if metod == "sendMessage":
-                maydon.update({"text": h, "parse_mode": "HTML"})
-            else:
-                fayllar = {MEDIA[media[0]][1]: media[1]}
-                if len(qadamlar) == 1:
-                    maydon.update({"caption": h, "parse_mode": "HTML"})
-            if ovozsiz:
-                maydon["disable_notification"] = "true" if fayllar else True
-            r = api(token, metod, maydon, fayllar)
-            if metod == "sendVoice" and "voice" not in r:
-                print("  !  Telegram buni ovozli xabar sifatida emas, oddiy audio/fayl sifatida qabul qildi")
-            mid = r["message_id"]
-            havolalar.append(f"https://t.me/{kanal[1:]}/{mid}" if kanal.startswith("@") else str(mid))
+        havolalar = yubor(token, kanal, matn, media, ovozsiz)
         os.makedirs(PAPKA, exist_ok=True)
         yangi = not os.path.exists(JURNAL)
         with open(JURNAL, "a", newline="", encoding="utf-8-sig") as f:

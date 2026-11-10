@@ -300,5 +300,118 @@ class Joyla(Tmp):
         self.assertNotIn("Traceback", p.stderr.decode("utf-8", "replace"))
 
 
+def oqi_json(yol):
+    with open(yol, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def modul(nom, yol):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(nom, yol)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+class Navbat(Tmp):
+    """templates/kanal-navbat/navbat.py - GitHub Actions'dagi joylovchi (Telegram soxtalashtirilgan)."""
+
+    def setUp(self):
+        super().setUp()
+        import datetime
+        self.dt = datetime
+        self.n = modul("navbat", os.path.join(ROOT, "templates", "kanal-navbat", "navbat.py"))
+        self.j = joyla_moduli()
+        self.chaqiruvlar = []
+        sanoq = iter(range(100, 200))
+
+        def soxta_api(token, metod, maydon=None, fayllar=None):
+            self.chaqiruvlar.append((metod, maydon.get("chat_id"), fayllar))
+            if self.xato_berilsin:
+                raise self.j.TgXato("Bad Request: chat not found")
+            return {"message_id": next(sanoq), "voice": {}} if metod == "sendVoice" else {"message_id": next(sanoq)}
+
+        self.xato_berilsin = False
+        self.j.api = soxta_api
+        self.hozir = datetime.datetime(2026, 11, 12, 14, 7, tzinfo=datetime.timezone.utc)   # 19:07 Toshkent
+
+    def post(self, pid, vaqt, media=None, matn="Sarlavha\n\nMatn"):
+        d = os.path.join(self.d, "navbat", pid)
+        os.makedirs(d)
+        with open(os.path.join(d, "post.txt"), "w", encoding="utf-8") as f:
+            f.write(matn)
+        if media:
+            with open(os.path.join(d, media[1]), "wb") as f:
+                f.write(b"ID3")
+        with open(os.path.join(d, "meta.json"), "w", encoding="utf-8") as f:
+            json.dump({"vaqt": vaqt, "kanal": "@sinov", "media": media, "ovozsiz": False}, f)
+
+    def ishla(self):
+        return self.n.ishla(ildiz=self.d, hozir=self.hozir, joyla=self.j, token="t", kanal_std="@std")
+
+    def test_vaqti_kelgani_joylanadi_kutayotgani_qoladi(self):
+        self.post("a", "2026-11-12T19:00+05:00", ["ovoz", "o.mp3"])
+        self.post("b", "2026-11-12T20:00+05:00")
+        self.assertEqual(self.ishla(), 0)
+        self.assertEqual([c[0] for c in self.chaqiruvlar], ["sendVoice"])
+        self.assertTrue(os.path.isdir(os.path.join(self.d, "navbat", "b")))
+        m = oqi_json(os.path.join(self.d, "yuborilgan", "a", "meta.json"))
+        self.assertEqual(m["havolalar"], ["https://t.me/sinov/100"])
+
+    def test_kechikkani_yuborilmaydi(self):
+        self.post("eski", "2026-11-12T09:00+05:00")
+        self.assertEqual(self.ishla(), 0)
+        self.assertEqual(self.chaqiruvlar, [])
+        self.assertTrue(os.path.isdir(os.path.join(self.d, "kechikkan", "eski")))
+
+    def test_xato_qayta_urinilmaydi(self):
+        self.post("x", "2026-11-12T19:00+05:00")
+        self.xato_berilsin = True
+        self.assertEqual(self.ishla(), 1)
+        self.assertTrue(os.path.isdir(os.path.join(self.d, "xato", "x")))
+        self.assertFalse(os.path.isdir(os.path.join(self.d, "navbat", "x")))
+
+    def test_bir_safarda_3_tadan_kop_emas(self):
+        for i in range(5):
+            self.post(f"p{i}", f"2026-11-12T18:{i:02d}+05:00")
+        self.assertEqual(self.ishla(), 0)
+        self.assertEqual(len(self.chaqiruvlar), 3)
+        self.assertEqual(len(os.listdir(os.path.join(self.d, "navbat"))), 2)
+
+    def test_vaqt_zonasiz_xato(self):
+        self.post("z", "2026-11-12T19:00")
+        self.assertEqual(self.ishla(), 1)
+        self.assertEqual(self.chaqiruvlar, [])
+
+
+class Navbatga(Tmp):
+    def test_navbatga_qoyish(self):
+        import datetime
+        ertaga = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d 19:00")
+        os.makedirs(os.path.join(self.d, "repo"))
+        mp3 = self.w("o.mp3", "ID3")
+        env = dict(os.environ, NAVBAT_PAPKA=os.path.join(self.d, "repo"), NAVBAT_ZONA="+05:00", NAVBAT_GITSIZ="1")
+        p = subprocess.run([sys.executable, os.path.join(S, "uz-telegram", "navbatga.py"),
+                            self.w("post.txt", "**Printer oflayn** bo'lsa\n\nMatn"), "--vaqt", ertaga,
+                            "--ovoz", mp3, "--kanal", "@sinov"], capture_output=True, env=env)
+        self.assertEqual(p.returncode, 0, p.stderr.decode("utf-8", "replace") + p.stdout.decode("utf-8", "replace"))
+        navbat = os.listdir(os.path.join(self.d, "repo", "navbat"))
+        self.assertEqual(len(navbat), 1)
+        self.assertTrue(navbat[0].endswith("_1900_printer-oflayn-bolsa"))
+        m = oqi_json(os.path.join(self.d, "repo", "navbat", navbat[0], "meta.json"))
+        self.assertTrue(m["vaqt"].endswith("19:00+05:00"))
+        self.assertEqual(m["media"], ["ovoz", "o.mp3"])
+        self.assertEqual(m["kanal"], "@sinov")
+
+    def test_otgan_vaqt_rad_etiladi(self):
+        os.makedirs(os.path.join(self.d, "repo"))
+        env = dict(os.environ, NAVBAT_PAPKA=os.path.join(self.d, "repo"), NAVBAT_GITSIZ="1")
+        p = subprocess.run([sys.executable, os.path.join(S, "uz-telegram", "navbatga.py"),
+                            self.w("p.txt", "Matn"), "--vaqt", "2020-01-01 10:00", "--kanal", "@s"],
+                           capture_output=True, env=env)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("kelajakda", (p.stdout + p.stderr).decode("utf-8", "replace"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)
