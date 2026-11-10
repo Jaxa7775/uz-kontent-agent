@@ -71,9 +71,14 @@ Foydalanuvchi botini sozlagan bo'lsa (`~/.claude/kontent-uz/telegram.json`), pos
 
 ```bash
 python joyla.py --tekshir                        # bot kanalda admin va post joylay oladimi
-python joyla.py post.txt [--rasm r.jpg | --fayl f.xlsx]          # faqat ko'rib chiqish
-python joyla.py post.txt [--rasm ... | --fayl ...] --yubor       # yuborish
+python joyla.py post.txt [--rasm r.jpg | --fayl f.xlsx | --ovoz o.mp3]   # faqat ko'rib chiqish
+python joyla.py post.txt [--rasm ... | --fayl ... | --ovoz ...] --yubor   # yuborish
 ```
+
+Ovozli post so'ralsa: avval foydalanuvchining o'z ovozini taklif qiling (ishonchliroq). Sun'iy ovoz
+xohlasa - `edge-tts` (`uz-UZ-SardorNeural` yoki `uz-UZ-MadinaNeural`), og'zaki matnni alohida yozing
+(inglizcha nomlarni o'zbekcha talaffuzda: "Eksel", "Vord"), ikkala ovozni yasab, foydalanuvchi
+eshitib tanlaganidan keyingina yuboring. Erkak yoki ayol ovozini o'zingiz tanlamang.
 
 Qat'iy tartib:
 

@@ -152,7 +152,8 @@ def baholash(xato, yaxshi):
 
 
 def telegram_post(matn, rasm=False):
-    matn = matn.strip("\n")
+    # joyla.py format belgilari (**qalin**, __qiya__, `kod`, ||spoiler||) kanalda ko'rinmaydi
+    matn = re.sub(r"\*\*|__|~~|\|\||`", "", matn).strip("\n")
     birinchi = matn.splitlines()[0] if matn else ""
     r = tekshir(birinchi, None, "telegram")
     r["sarlavha"] = birinchi

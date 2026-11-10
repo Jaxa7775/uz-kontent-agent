@@ -264,10 +264,14 @@ class Joyla(Tmp):
 
     def test_reja_izoh_chegarasi(self):
         j = joyla_moduli()
-        _, _, q = j.reja_tuz("qisqa", "r.jpg", None)
+        _, _, q = j.reja_tuz("qisqa", ("rasm", "r.jpg"))
         self.assertEqual([m for m, _ in q], ["sendPhoto"])
-        _, _, q = j.reja_tuz("a" * 1500, None, "f.xlsx")
+        _, _, q = j.reja_tuz("a" * 1500, ("fayl", "f.xlsx"))
         self.assertEqual([m for m, _ in q], ["sendMessage", "sendDocument"])
+        _, _, q = j.reja_tuz("qisqa", ("ovoz", "o.mp3"))
+        self.assertEqual([m for m, _ in q], ["sendVoice"])
+        _, _, q = j.reja_tuz("a" * 1500, ("ovoz", "o.mp3"))
+        self.assertEqual([m for m, _ in q], ["sendVoice", "sendMessage"])
 
     def test_korib_chiqish_yubormaydi(self):
         env = dict(os.environ, TELEGRAM_KANAL="https://t.me/sinov_kanal", TELEGRAM_BOT_TOKEN="123456:" + "A" * 35)

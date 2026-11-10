@@ -115,7 +115,11 @@ python skills/uz-telegram/joyla.py post.txt                         # Telegram: 
 
 ### Telegram kanalga joylash
 
-`joyla.py` rasmiy Bot API orqali postni (rasm yoki fayl bilan) kanalga yuboradi. Sozlash:
+`joyla.py` rasmiy Bot API orqali postni (rasm, fayl yoki ovozli xabar bilan) kanalga yuboradi.
+O'zbekcha sun'iy ovoz kerak bo'lsa: `pip install edge-tts`, keyin
+`edge-tts --voice uz-UZ-SardorNeural --file matn.txt --write-media ovoz.mp3` (yoki `uz-UZ-MadinaNeural`)
+va `joyla.py post.txt --ovoz ovoz.mp3`. Bu Microsoft'ning onlayn xizmati va ovoz sun'iy eshitiladi.
+Sozlash:
 
 1. [@BotFather](https://t.me/BotFather) da bot oching (yoki borini ishlating), tokenni faylga saqlang.
 2. Botni kanalga **"Xabar joylash"** huquqi bilan admin qiling.

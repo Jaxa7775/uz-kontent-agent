@@ -5,6 +5,7 @@
     python joyla.py post.txt                        # KO'RIB CHIQISH: nima yuborilishini ko'rsatadi, yubormaydi
     python joyla.py post.txt --rasm rasm.jpg        # rasm bilan
     python joyla.py post.txt --fayl shablon.xlsx    # fayl (hujjat) bilan
+    python joyla.py post.txt --ovoz ovoz.mp3        # ovozli xabar, matn izoh bo'ladi (OGG/Opus, MP3, M4A)
     python joyla.py post.txt --yubor                # HAQIQATAN yuborish
     python joyla.py post.txt --yubor --ovozsiz      # obunachilarga bildirishnomasiz
 
@@ -173,17 +174,23 @@ def tekshir(kanal, token):
     return 1
 
 
-def reja_tuz(matn, rasm, fayl):
+MEDIA = {"rasm": ("sendPhoto", "photo", "rasm"),
+         "fayl": ("sendDocument", "document", "fayl"),
+         "ovoz": ("sendVoice", "voice", "ovozli xabar")}
+
+
+def reja_tuz(matn, media=None):
+    """media: None yoki (tur, yo'l); tur - rasm | fayl | ovoz."""
     h = html_ga(matn)
     n = tg_uzunlik(korinadigan(h))
-    media = rasm or fayl
     if not media:
         return h, n, [("sendMessage", "matn")]
+    metod, _, nom = MEDIA[media[0]]
     if n <= IZOH_CHEGARA:
-        return h, n, [("sendPhoto" if rasm else "sendDocument", "izohli " + ("rasm" if rasm else "fayl"))]
-    if rasm:
-        return h, n, [("sendPhoto", "rasm (izohsiz)"), ("sendMessage", "matn")]
-    return h, n, [("sendMessage", "matn"), ("sendDocument", "fayl (izohsiz)")]
+        return h, n, [(metod, "izohli " + nom)]
+    if media[0] == "fayl":
+        return h, n, [("sendMessage", "matn"), (metod, nom + " (izohsiz)")]
+    return h, n, [(metod, nom + " (izohsiz)"), ("sendMessage", "matn")]
 
 
 def main():
@@ -191,32 +198,33 @@ def main():
     yubor = "--yubor" in a
     ovozsiz = "--ovozsiz" in a
     a = [x for x in a if x not in ("--yubor", "--ovozsiz")]
-    rasm = fayl = None
-    if "--rasm" in a:
-        i = a.index("--rasm"); rasm = a[i + 1]; del a[i:i + 2]
-    if "--fayl" in a:
-        i = a.index("--fayl"); fayl = a[i + 1]; del a[i:i + 2]
+    tanlangan = []
+    for tur in MEDIA:
+        if "--" + tur in a:
+            i = a.index("--" + tur); tanlangan.append((tur, a[i + 1])); del a[i:i + 2]
+    media = tanlangan[0] if tanlangan else None
     kanal, token = sozlamalar()
     try:
         if "--tekshir" in a:
             print(); kod = tekshir(kanal, token); print(); sys.exit(kod)
         if not a or not os.path.exists(a[0]):
             print(__doc__); sys.exit(1)
-        if rasm and fayl:
-            print("bitta postga yo rasm, yo fayl - ikkalasi emas"); sys.exit(1)
-        for m in (rasm, fayl):
-            if m and not os.path.exists(m):
-                print(f"fayl topilmadi: {m}"); sys.exit(1)
+        if len(tanlangan) > 1:
+            print("bitta postga bitta media: --rasm, --fayl yoki --ovoz"); sys.exit(1)
+        if media and not os.path.exists(media[1]):
+            print(f"fayl topilmadi: {media[1]}"); sys.exit(1)
         with open(a[0], encoding="utf-8-sig", errors="replace") as f:
             matn = f.read().strip("\n")
-        h, n, qadamlar = reja_tuz(matn, rasm, fayl)
+        h, n, qadamlar = reja_tuz(matn, media)
         birinchi = korinadigan(h).splitlines()[0] if matn else ""
         sarlavha = "YUBORILMOQDA" if yubor else "KO'RIB CHIQISH - hech narsa yuborilmadi"
         print(f"\n  {sarlavha}")
         kanal_k = kanal or "(ko'rsatilmagan)"
         print(f"  kanal:          {kanal_k}")
         print(f"  token:          {'bor' if token else 'TOPILMADI'}")
-        print(f"  uzunlik:        {n} / {MATN_CHEGARA} belgi" + (f"   (izoh chegarasi {IZOH_CHEGARA})" if (rasm or fayl) else ""))
+        print(f"  uzunlik:        {n} / {MATN_CHEGARA} belgi" + (f"   (izoh chegarasi {IZOH_CHEGARA})" if media else ""))
+        if media:
+            print(f"  {media[0] + ':':<16}{media[1]}")
         print(f"  xabarlar:       {' + '.join(q[1] for q in qadamlar)}")
         print(f'  birinchi qator: "{birinchi[:80]}"')
         if n > MATN_CHEGARA:
@@ -227,24 +235,24 @@ def main():
                 print("  | " + q)
             print("  ---------------------------------------------------------------------")
             print(f"\n  Yuborish uchun: python joyla.py {a[0]}"
-                  + (f" --rasm {rasm}" if rasm else "") + (f" --fayl {fayl}" if fayl else "") + " --yubor\n")
+                  + (f" --{media[0]} {media[1]}" if media else "") + " --yubor\n")
             return
         if not token or not kanal:
             print("  x  token yoki kanal yo'q - avval: python joyla.py --tekshir"); sys.exit(1)
         havolalar = []
         for metod, _ in qadamlar:
-            maydon = {"chat_id": kanal, "disable_notification": "true" if ovozsiz else None}
-            fayllar = None
+            maydon, fayllar = {"chat_id": kanal}, None
             if metod == "sendMessage":
                 maydon.update({"text": h, "parse_mode": "HTML"})
             else:
-                kalit = "photo" if metod == "sendPhoto" else "document"
-                fayllar = {kalit: rasm or fayl}
+                fayllar = {MEDIA[media[0]][1]: media[1]}
                 if len(qadamlar) == 1:
                     maydon.update({"caption": h, "parse_mode": "HTML"})
-            if not fayllar and maydon.get("disable_notification"):
-                maydon["disable_notification"] = True
+            if ovozsiz:
+                maydon["disable_notification"] = "true" if fayllar else True
             r = api(token, metod, maydon, fayllar)
+            if metod == "sendVoice" and "voice" not in r:
+                print("  !  Telegram buni ovozli xabar sifatida emas, oddiy audio/fayl sifatida qabul qildi")
             mid = r["message_id"]
             havolalar.append(f"https://t.me/{kanal[1:]}/{mid}" if kanal.startswith("@") else str(mid))
         os.makedirs(PAPKA, exist_ok=True)
