@@ -97,7 +97,7 @@ shuni o'qiydi. Bu yerda ayniqsa muhim, chunki so'zlarni kamerada ovoz chiqarib a
 | `/uz-trend` | Yo'nalishda nima ishlayapti - har bir kanalning o'z medianasiga karralik bo'yicha. |
 | `/uz-audit` | Uchala platforma, oxirida yigirmata emas, BITTA tuzatish. |
 
-## Yettita vosita
+## Sakkizta vosita
 
 Hammasi toza Python 3 da, qo'shimcha kutubxonasiz ishlaydi. Skill'lar shunchaki so'rov emas -
 sababi shular. (Windows'da `python`, macOS/Linux'da `python3`.)
@@ -110,7 +110,25 @@ python skills/uz-seo/boblar.py transkript.srt                       # YouTube bo
 python skills/uz-seo/imlo.py --variant "o'qituvchi"                 # yozilish variantlari, lotin<->kirill
 python skills/uz-tahlil/retention.py video.csv --davomiylik 600     # tomoshabin qayerda ketdi
 python skills/uz-trend/trend.py yigilgan.json --min 2.0             # o'z kanaliga nisbatan saralash
+python skills/uz-telegram/joyla.py post.txt                         # Telegram: ko'rib chiqish (--yubor bilan yuboradi)
 ```
+
+### Telegram kanalga joylash
+
+`joyla.py` rasmiy Bot API orqali postni (rasm yoki fayl bilan) kanalga yuboradi. Sozlash:
+
+1. [@BotFather](https://t.me/BotFather) da bot oching (yoki borini ishlating), tokenni faylga saqlang.
+2. Botni kanalga **"Xabar joylash"** huquqi bilan admin qiling.
+3. [`templates/telegram.example.json`](templates/telegram.example.json) ni
+   `~/.claude/kontent-uz/telegram.json` deb nusxalang, kanal va token fayli yo'lini yozing.
+4. `python skills/uz-telegram/joyla.py --tekshir`
+
+`--yubor` bo'lmasa hech narsa yuborilmaydi - faqat ko'rib chiqish. Token repoda ham, ekranda ham
+ko'rinmaydi.
+
+YouTube, Instagram va TikTok'ga avtomatik joylash yo'q: YouTube API orqali tekshiruvdan o'tmagan
+loyihalar yuklagan videolar "private" holatda qulflanadi, Instagram va TikTok API'lari esa biznes
+akkaunt va ilova tekshiruvini talab qiladi. Ular uchun skill'lar matnni tayyorlaydi, joylash - sizda.
 
 Testlar: `python tests/test_vositalar.py`
 
@@ -118,9 +136,10 @@ Testlar: `python tests/test_vositalar.py`
 
 Ko'p to'plamlar yozmaydigan qism.
 
-**Hech narsani joylamaydi.** Har bir skill nusxa olinadigan blok va savol bilan tugaydi: joylaymizmi
-yoki o'zgartiramizmi? O'zi kanalingizni boshqaraman degan har qanday narsaga shu farqni yodda tutib
-qarang.
+**Tasdiqsiz hech narsani joylamaydi.** Har bir skill nusxa olinadigan blok va savol bilan tugaydi:
+joylaymizmi yoki o'zgartiramizmi? Yagona istisno - Telegram'ga `joyla.py --yubor`, va u ham faqat siz
+aynan shu postga "ha" degandan keyin ishga tushiriladi. O'zi kanalingizni boshqaraman degan har qanday
+narsaga shu farqni yodda tutib qarang.
 
 **`hook_baho.py` - taxminiy hisob, bashorat emas.** U so'zlarga qaraydi (raqamlar, "siz", savol
 so'zlari, xavf so'zlari) va hech qanday real statistika bo'yicha kalibrlanmagan. Ataylab yomon yozilgan

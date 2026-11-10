@@ -237,5 +237,49 @@ class Trend(Tmp):
         self.assertEqual(r["yuqori"][0]["korishlar"], 4500)
 
 
+def joyla_moduli():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("joyla", os.path.join(S, "uz-telegram", "joyla.py"))
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+class Joyla(Tmp):
+    def test_html_format(self):
+        j = joyla_moduli()
+        h = j.html_ga("**Excel** darsi <yangi> & `Ctrl + C` va `**emas**`\n> iqtibos\n[havola](https://t.me/x?a=1&b=2) ||javob||")
+        self.assertIn("<b>Excel</b>", h)
+        self.assertIn("&lt;yangi&gt; &amp;", h)
+        self.assertIn("<code>Ctrl + C</code>", h)
+        self.assertIn("<code>**emas**</code>", h)
+        self.assertIn("<blockquote>iqtibos</blockquote>", h)
+        self.assertIn('<a href="https://t.me/x?a=1&amp;b=2">havola</a>', h)
+        self.assertIn("<tg-spoiler>javob</tg-spoiler>", h)
+
+    def test_uzunlik_utf16(self):
+        j = joyla_moduli()
+        self.assertEqual(j.tg_uzunlik("ab😀"), 4)
+        self.assertEqual(j.tg_uzunlik(j.korinadigan(j.html_ga("**ab**"))), 2)
+
+    def test_reja_izoh_chegarasi(self):
+        j = joyla_moduli()
+        _, _, q = j.reja_tuz("qisqa", "r.jpg", None)
+        self.assertEqual([m for m, _ in q], ["sendPhoto"])
+        _, _, q = j.reja_tuz("a" * 1500, None, "f.xlsx")
+        self.assertEqual([m for m, _ in q], ["sendMessage", "sendDocument"])
+
+    def test_korib_chiqish_yubormaydi(self):
+        env = dict(os.environ, TELEGRAM_KANAL="https://t.me/sinov_kanal", TELEGRAM_BOT_TOKEN="123456:" + "A" * 35)
+        p = subprocess.run([sys.executable, os.path.join(S, "uz-telegram", "joyla.py"),
+                            self.w("post.txt", "**Sarlavha** qatori\n\nMatn")], capture_output=True, env=env)
+        out = p.stdout.decode("utf-8")
+        self.assertEqual(p.returncode, 0, p.stderr.decode("utf-8", "replace"))
+        self.assertIn("hech narsa yuborilmadi", out)
+        self.assertIn("@sinov_kanal", out)
+        self.assertIn('"Sarlavha qatori"', out)
+        self.assertNotIn("A" * 35, out)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

@@ -64,7 +64,29 @@ obunachini charchatadigan va o'zingiz uzoq ushlab tura olmaydigan ritm - eng yom
 - qaysi tur va nega aynan shu (bitta qator)
 - rasm yoki fayl kerak bo'lsa - nima bo'lishi kerakligi (masalan: "Excel shablon, 2 varaq: ...")
 
+## Kanalga joylash (ixtiyoriy)
+
+Foydalanuvchi botini sozlagan bo'lsa (`~/.claude/kontent-uz/telegram.json`), postni shu papkadagi
+`joyla.py` bilan kanalga yuborish mumkin:
+
+```bash
+python joyla.py --tekshir                        # bot kanalda admin va post joylay oladimi
+python joyla.py post.txt [--rasm r.jpg | --fayl f.xlsx]          # faqat ko'rib chiqish
+python joyla.py post.txt [--rasm ... | --fayl ...] --yubor       # yuborish
+```
+
+Qat'iy tartib:
+
+1. Postni faylga yozing va avval `--yubor` qo'shmasdan ishga tushiring. Chiqqan ko'rib chiqishni
+   (uzunlik, xabarlar soni, kanalda ko'rinadigan matn) foydalanuvchiga ko'rsating.
+2. `--yubor` ni faqat foydalanuvchi AYNAN SHU postga "ha" degandan keyin ishga tushiring. Matn
+   o'zgarsa - qaytadan ko'rib chiqish va qaytadan tasdiq. Bitta tasdiq bitta post uchun.
+3. Yuborilgandan keyin havolani bering. Tokenni hech qachon chiqarmang va so'ramang.
+
+Kanalga chiqqan postni hamma ko'radi. Xato post o'chirilsa ham, obunachilarga bildirishnoma ketib
+bo'lgan bo'ladi.
+
 ## Darvoza
 
-Bu skill hech narsani o'zi joylamaydi: u yozadi, siz joylaysiz. Har bir natija foydalanuvchi nusxa
+Bu skill foydalanuvchi tasdiqlamaguncha hech narsani joylamaydi. Har bir natija foydalanuvchi nusxa
 oladigan blok bilan tugaydi, oxirgi qator esa doim savol: **Joylaymizmi yoki o'zgartiramizmi?**
