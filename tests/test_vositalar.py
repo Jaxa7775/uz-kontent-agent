@@ -292,6 +292,13 @@ class Joyla(Tmp):
         self.assertIn("@ikkinchi", out)
         self.assertIn("--kanal @ikkinchi --yubor", out)
 
+    def test_kanal_qiymatsiz(self):
+        p = subprocess.run([sys.executable, os.path.join(S, "uz-telegram", "joyla.py"), "--tekshir", "--kanal"],
+                           capture_output=True)
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("qiymat kerak", p.stdout.decode("utf-8"))
+        self.assertNotIn("Traceback", p.stderr.decode("utf-8", "replace"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)

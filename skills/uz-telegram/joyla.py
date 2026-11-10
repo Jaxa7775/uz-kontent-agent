@@ -209,14 +209,18 @@ def main():
     yubor = "--yubor" in a
     ovozsiz = "--ovozsiz" in a
     a = [x for x in a if x not in ("--yubor", "--ovozsiz")]
-    tanlangan = []
-    for tur in MEDIA:
-        if "--" + tur in a:
-            i = a.index("--" + tur); tanlangan.append((tur, a[i + 1])); del a[i:i + 2]
+    def qiymat(kalit):
+        i = a.index(kalit)
+        if i + 1 >= len(a) or a[i + 1].startswith("--"):
+            print(f"{kalit} dan keyin qiymat kerak (PowerShell'da @ bilan boshlansa, qo'shtirnoqqa oling: '@kanal')")
+            sys.exit(1)
+        v = a[i + 1]
+        del a[i:i + 2]
+        return v
+
+    tanlangan = [(tur, qiymat("--" + tur)) for tur in MEDIA if "--" + tur in a]
     media = tanlangan[0] if tanlangan else None
-    kanal_arg = None
-    if "--kanal" in a:
-        i = a.index("--kanal"); kanal_arg = kanal_nomi(a[i + 1]); del a[i:i + 2]
+    kanal_arg = kanal_nomi(qiymat("--kanal")) if "--kanal" in a else None
     kanal, token = sozlamalar()
     if kanal_arg:
         kanal = kanal_arg
