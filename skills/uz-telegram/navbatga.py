@@ -4,8 +4,13 @@
     python navbatga.py post.txt --vaqt "2026-11-12 19:00"              # mahalliy vaqt
     python navbatga.py post.txt --vaqt "2026-11-12 19:00" --ovoz o.mp3  # --rasm / --fayl ham bo'ladi
     python navbatga.py post.txt --vaqt "..." --kanal '@boshqa' --ovozsiz
+    python navbatga.py --toplam reja.json                              # ko'p postni bitta commit bilan
     python navbatga.py --royxat                                        # navbat, oxirgi joylanganlar, xatolar
     python navbatga.py --bekor <id>                                    # navbatdan olib tashlash
+
+reja.json: [{"post": "yo'l/post.txt", "vaqt": "2026-11-12 09:00", "ovozsiz": false,
+             "media": ["ovoz", "yo'l/o.mp3"] yoki null, "kanal": "@ixtiyoriy"}, ...]
+To'plamda avval HAMMASI tekshiriladi; bittasi xato bo'lsa, hech biri navbatga qo'yilmaydi.
 
 Sozlamalar ~/.claude/kontent-uz/telegram.json da:
     "navbat_papka": "D:/Dasturlar/kanal-navbat"   - navbat reposining kompyuterdagi nusxasi
@@ -75,6 +80,65 @@ def slug(matn):
     return s.strip("-")[:40] or "post"
 
 
+def tekshir_element(post, vaqt, media, kanal, hozir):
+    """Navbatga qo'yishdan oldingi tekshiruv. (matn, uzunlik, qadamlar) qaytaradi."""
+    if not os.path.exists(post):
+        raise SystemExit(f"post fayli topilmadi: {post}")
+    if media and not os.path.exists(media[1]):
+        raise SystemExit(f"fayl topilmadi: {media[1]}")
+    if vaqt <= hozir + datetime.timedelta(minutes=5):
+        raise SystemExit(f"{post}: vaqt kelajakda bo'lishi kerak (kamida 5 daqiqa keyin)")
+    if not kanal:
+        raise SystemExit("kanal yo'q: telegram.json dagi \"kanal\" yoki --kanal")
+    with open(post, encoding="utf-8-sig", errors="replace") as f:
+        matn = f.read().strip("\n")
+    _, n, qadamlar = joyla.reja_tuz(matn, media)
+    if n > joyla.MATN_CHEGARA:
+        raise SystemExit(f"{post}: {n} belgi - {joyla.MATN_CHEGARA} dan uzun")
+    return matn, n, qadamlar
+
+
+def yarat(papka, zona, pid, post, vaqt, media, kanal, ovozsiz, hozir):
+    manzil = os.path.join(papka, "navbat", pid)
+    os.makedirs(manzil)
+    shutil.copyfile(post, os.path.join(manzil, "post.txt"))
+    meta = {"vaqt": vaqt.isoformat(timespec="minutes"), "kanal": kanal, "media": None,
+            "ovozsiz": ovozsiz, "qoyildi": hozir.astimezone(zona).isoformat(timespec="seconds")}
+    if media:
+        nom = os.path.basename(media[1])
+        shutil.copyfile(media[1], os.path.join(manzil, nom))
+        meta["media"] = [media[0], nom]
+    with open(os.path.join(manzil, "meta.json"), "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=1)
+
+
+def toplam(reja_yoli, papka, zona, kanal_std):
+    with open(reja_yoli, encoding="utf-8-sig") as f:
+        reja = json.load(f)
+    hozir = datetime.datetime.now(datetime.timezone.utc)
+    git(papka, "pull", "--rebase", "-q")
+    tayyor, idlar = [], set()
+    for e in reja:                                     # 1) hammasini tekshirish
+        vaqt = vaqt_ol(e["vaqt"], zona)
+        media = tuple(e["media"]) if e.get("media") else None
+        kanal = joyla.kanal_nomi(e.get("kanal")) or kanal_std
+        matn, n, qadamlar = tekshir_element(e["post"], vaqt, media, kanal, hozir)
+        pid = vaqt.strftime("%Y-%m-%d_%H%M") + "_" + slug(matn)
+        if pid in idlar or os.path.exists(os.path.join(papka, "navbat", pid)):
+            raise SystemExit(f"takroriy id: {pid}")
+        idlar.add(pid)
+        tayyor.append((pid, e["post"], vaqt, media, kanal, bool(e.get("ovozsiz")), n))
+    for pid, post, vaqt, media, kanal, ovozsiz, _ in tayyor:   # 2) yaratish
+        yarat(papka, zona, pid, post, vaqt, media, kanal, ovozsiz, hozir)
+    git(papka, "add", "-A")
+    git(papka, "commit", "-q", "-m", f"navbatga: {len(tayyor)} ta post")
+    git(papka, "push", "-q")
+    print(f"\n  ok navbatga {len(tayyor)} ta post qo'yildi ({zona_nomi(zona)})")
+    for pid, _, vaqt, _, _, ovozsiz, n in sorted(tayyor, key=lambda x: x[2]):
+        print(f"    {vaqt.strftime('%Y-%m-%d %H:%M')}  {n:>4} belgi{'  ovozsiz' if ovozsiz else ''}   {pid}")
+    print()
+
+
 def qoy(a, papka, zona, kanal_std):
     def qiymat(kalit):
         i = a.index(kalit)
@@ -94,35 +158,15 @@ def qoy(a, papka, zona, kanal_std):
     if len(media) > 1:
         raise SystemExit("bitta postga bitta media")
     media = media[0] if media else None
-    if not a or not os.path.exists(a[0]):
-        raise SystemExit("post fayli topilmadi")
-    if media and not os.path.exists(media[1]):
-        raise SystemExit(f"fayl topilmadi: {media[1]}")
+    if not a:
+        raise SystemExit("post fayli ko'rsatilmagan")
     hozir = datetime.datetime.now(datetime.timezone.utc)
-    if vaqt <= hozir + datetime.timedelta(minutes=5):
-        raise SystemExit("vaqt kelajakda bo'lishi kerak (kamida 5 daqiqa keyin). Darhol kerak bo'lsa: joyla.py --yubor")
-    if not kanal:
-        raise SystemExit("kanal yo'q: telegram.json dagi \"kanal\" yoki --kanal")
-    with open(a[0], encoding="utf-8-sig", errors="replace") as f:
-        matn = f.read().strip("\n")
-    _, n, qadamlar = joyla.reja_tuz(matn, media)
-    if n > joyla.MATN_CHEGARA:
-        raise SystemExit(f"post {n} belgi - {joyla.MATN_CHEGARA} dan uzun")
+    matn, n, qadamlar = tekshir_element(a[0], vaqt, media, kanal, hozir)
     git(papka, "pull", "--rebase", "-q")
     pid = vaqt.strftime("%Y-%m-%d_%H%M") + "_" + slug(matn)
-    manzil = os.path.join(papka, "navbat", pid)
-    if os.path.exists(manzil):
+    if os.path.exists(os.path.join(papka, "navbat", pid)):
         raise SystemExit(f"navbatda shu nomli post bor: {pid}")
-    os.makedirs(manzil)
-    shutil.copyfile(a[0], os.path.join(manzil, "post.txt"))
-    meta = {"vaqt": vaqt.isoformat(timespec="minutes"), "kanal": kanal, "media": None,
-            "ovozsiz": ovozsiz, "qoyildi": hozir.astimezone(zona).isoformat(timespec="seconds")}
-    if media:
-        nom = os.path.basename(media[1])
-        shutil.copyfile(media[1], os.path.join(manzil, nom))
-        meta["media"] = [media[0], nom]
-    with open(os.path.join(manzil, "meta.json"), "w", encoding="utf-8") as f:
-        json.dump(meta, f, ensure_ascii=False, indent=1)
+    yarat(papka, zona, pid, a[0], vaqt, media, kanal, ovozsiz, hozir)
     git(papka, "add", "-A")
     git(papka, "commit", "-q", "-m", f"navbatga: {pid}")
     git(papka, "push", "-q")
@@ -196,6 +240,8 @@ def main():
         royxat(papka, zona)
     elif a[0] == "--bekor" and len(a) > 1:
         bekor(papka, a[1])
+    elif a[0] == "--toplam" and len(a) > 1:
+        toplam(a[1], papka, zona, kanal_std)
     else:
         qoy(a, papka, zona, kanal_std)
 

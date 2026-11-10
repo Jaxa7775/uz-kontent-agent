@@ -18,7 +18,7 @@ yoki muhit o'zgaruvchilarida: TELEGRAM_BOT_TOKEN, TELEGRAM_KANAL.
 Bot kanalda "Xabar joylash" huquqi bilan admin bo'lishi kerak (--tekshir buni ko'rsatadi).
 Token hech qachon ekranga chiqarilmaydi.
 
-Post matnida format: **qalin**, __qiya__, ~~ustidan chizilgan~~, `kod`, ||spoiler||,
+Post matnida format: **qalin**, __qiya__, ~~ustidan chizilgan~~, `kod`, ```kod bloki```, ||spoiler||,
 [matn](https://havola), "> " bilan boshlangan qatorlar - iqtibos. Hammasi Telegram HTML formatiga
 o'giriladi, qolgan belgilar (<, >, &) xavfsiz qilinadi.
 
@@ -90,8 +90,18 @@ def _qator_format(t):
     return t
 
 
+def _xavfsiz(t):
+    return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def html_ga(matn):
-    t = matn.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    # ```kod bloklari``` -> <pre>, ichi formatlanmaydi; qolgan qismlar oddiy qoidalar bilan
+    qism = re.split(r"```[A-Za-z0-9_+-]*\n?(.*?)\n?```", matn, flags=re.S)
+    return "".join("<pre>" + _xavfsiz(q) + "</pre>" if i % 2 else _oddiy_html(q) for i, q in enumerate(qism))
+
+
+def _oddiy_html(matn):
+    t = _xavfsiz(matn)
     qatorlar, natija, iqtibos = t.split("\n"), [], []
     for q in qatorlar:
         if q.startswith("&gt; ") or q == "&gt;":

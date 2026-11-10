@@ -257,6 +257,14 @@ class Joyla(Tmp):
         self.assertIn('<a href="https://t.me/x?a=1&amp;b=2">havola</a>', h)
         self.assertIn("<tg-spoiler>javob</tg-spoiler>", h)
 
+    def test_kod_bloki(self):
+        j = joyla_moduli()
+        h = j.html_ga("**Skript:**\n```\n$a = 1 -> <b>\n**emas**\n```\nTugadi `x`")
+        self.assertIn("<pre>$a = 1 -&gt; &lt;b&gt;\n**emas**</pre>", h)
+        self.assertIn("<b>Skript:</b>", h)
+        self.assertIn("<code>x</code>", h)
+        self.assertNotIn("```", h)
+
     def test_uzunlik_utf16(self):
         j = joyla_moduli()
         self.assertEqual(j.tg_uzunlik("ab😀"), 4)
@@ -402,6 +410,28 @@ class Navbatga(Tmp):
         self.assertTrue(m["vaqt"].endswith("19:00+05:00"))
         self.assertEqual(m["media"], ["ovoz", "o.mp3"])
         self.assertEqual(m["kanal"], "@sinov")
+
+    def test_toplam_hammasi_yoki_hech_biri(self):
+        import datetime
+        ertaga = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        repo = os.path.join(self.d, "repo")
+        os.makedirs(repo)
+        env = dict(os.environ, NAVBAT_PAPKA=repo, NAVBAT_ZONA="+05:00", NAVBAT_GITSIZ="1")
+        a, b = self.w("a.txt", "**Birinchi** post"), self.w("b.txt", "Ikkinchi post")
+        yomon = self.w("yomon.json", json.dumps([{"post": a, "vaqt": f"{ertaga} 09:00", "kanal": "@s"},
+                                                 {"post": b, "vaqt": "2020-01-01 09:00", "kanal": "@s"}]))
+        p = subprocess.run([sys.executable, os.path.join(S, "uz-telegram", "navbatga.py"), "--toplam", yomon],
+                           capture_output=True, env=env)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertFalse(os.path.isdir(os.path.join(repo, "navbat")) and os.listdir(os.path.join(repo, "navbat")))
+        yaxshi = self.w("yaxshi.json", json.dumps([{"post": a, "vaqt": f"{ertaga} 09:00", "kanal": "@s"},
+                                                   {"post": b, "vaqt": f"{ertaga} 12:00", "kanal": "@s", "ovozsiz": True}]))
+        p = subprocess.run([sys.executable, os.path.join(S, "uz-telegram", "navbatga.py"), "--toplam", yaxshi],
+                           capture_output=True, env=env)
+        self.assertEqual(p.returncode, 0, (p.stdout + p.stderr).decode("utf-8", "replace"))
+        idlar = sorted(os.listdir(os.path.join(repo, "navbat")))
+        self.assertEqual(len(idlar), 2)
+        self.assertTrue(oqi_json(os.path.join(repo, "navbat", idlar[1], "meta.json"))["ovozsiz"])
 
     def test_otgan_vaqt_rad_etiladi(self):
         os.makedirs(os.path.join(self.d, "repo"))
