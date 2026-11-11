@@ -366,6 +366,14 @@ class Navbat(Tmp):
         m = oqi_json(os.path.join(self.d, "yuborilgan", "a", "meta.json"))
         self.assertEqual(m["havolalar"], ["https://t.me/sinov/100"])
 
+    def test_5_daqiqa_erta_chaqirilsa_ham_joylanadi(self):
+        self.post("yaqin", "2026-11-12T19:11+05:00")   # 4 daqiqa qoldi
+        self.post("uzoq", "2026-11-12T19:13+05:00")    # 6 daqiqa qoldi
+        self.assertEqual(self.ishla(), 0)
+        self.assertEqual(len(self.chaqiruvlar), 1)
+        self.assertTrue(os.path.isdir(os.path.join(self.d, "yuborilgan", "yaqin")))
+        self.assertTrue(os.path.isdir(os.path.join(self.d, "navbat", "uzoq")))
+
     def test_kechikkani_yuborilmaydi(self):
         self.post("eski", "2026-11-12T09:00+05:00")
         self.assertEqual(self.ishla(), 0)

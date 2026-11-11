@@ -2,7 +2,8 @@ name: Kanal navbati
 
 on:
   schedule:
-    - cron: "7 * * * *"        # har soatda, :07 da (UTC). GitHub ba'zan 5-30 daqiqa kechiktiradi.
+    - cron: "7 * * * *"        # ZAXIRA: har soatda :07 da (UTC). Ishonchsiz - GitHub ba'zan soatlab
+                               # o'tkazib yuboradi. Asosiy taymer - cron-job.org (README).
   workflow_dispatch:
     inputs:
       rejim:
@@ -24,6 +25,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          # ishga tushgan paytdagi eng oxirgi holat: navbatda kutgan ikkinchi ish oldingisi
+          # joylagan postni eski nusxadan qayta yubormasin
+          ref: ${{ github.ref_name }}
 
       - name: Vaqti kelgan postlarni joylash
         env:

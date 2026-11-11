@@ -1,7 +1,22 @@
 # Kanal navbati
 
-Tasdiqlangan Telegram postlari shu yerda navbatda turadi. GitHub Actions har soatda (`:07` da, UTC)
-`navbat.py` ni ishga tushiradi va vaqti kelganini kanalga joylaydi. Kompyuter o'chiq bo'lsa ham ishlaydi.
+Tasdiqlangan Telegram postlari shu yerda navbatda turadi. GitHub Actions `navbat.py` ni ishga tushiradi,
+u vaqti kelgan (yoki 5 daqiqadan kam qolgan) postlarni kanalga joylaydi. Kompyuter o'chiq bo'lsa ham ishlaydi.
+
+Uni ikkita taymer ishga tushiradi:
+
+1. **Asosiy: cron-job.org (bepul).** Post vaqtlarida (masalan 08:00, 12:00, 15:00, 18:00, 21:00,
+   vaqt zonasi `Asia/Tashkent`) GitHub API orqali workflow'ni chaqiradi:
+   - `POST https://api.github.com/repos/<egasi>/<repo>/actions/workflows/navbat.yml/dispatches`
+   - sarlavhalar: `Authorization: Bearer <PAT>`, `Accept: application/vnd.github+json`,
+     `Content-Type: application/json`
+   - tana: `{"ref":"main","inputs":{"rejim":"joyla"}}`
+   - PAT: fine-grained, faqat shu repo, ruxsat Actions: Read and write. To'g'ri javob: `204`.
+2. **Zaxira: GitHub'ning o'z cron'i** (har soat `:07` da, UTC). Unga yolg'iz tayanmang: yuklama
+   paytida ishga tushishlarni soatlab o'tkazib yuboradi (bir kechada 14 tadan 2 tasigina ishlagan).
+
+Ikkalasi bir vaqtda chaqirsa ham post ikki marta chiqmaydi: ishlar navbat bilan bajariladi
+(`concurrency`), har biri eng oxirgi holatni oladi, joylangan post esa `yuborilgan/` ga ko'chadi.
 
 - `navbat/` - kutayotgan postlar
 - `yuborilgan/` - joylanganlar (meta.json da havola)
@@ -22,8 +37,9 @@ Sozlash: repo -> Settings -> Secrets and variables -> Actions:
 
 Tekshirish: Actions -> "Kanal navbati" -> Run workflow -> rejim: `tekshir`.
 
-Bepul chegara: yopiq repoda GitHub Actions oyiga 2000 daqiqa beradi; har soatlik ishga tushish
-taxminan 720 daqiqa ishlatadi. Postlar rejalashtirilgan soatdan keyin taxminan 5-40 daqiqa ichida
-chiqadi - shuning uchun vaqtni soat boshiga qo'ying.
+Bepul chegara: yopiq repoda GitHub Actions oyiga 2000 daqiqa beradi; har soatlik zaxira taxminan
+720 daqiqa, kuniga 5 ta taymer chaqiruvi taxminan 150 daqiqa ishlatadi. Taymer bilan post belgilangan
+daqiqada chiqadi; taymer vaqtlari post vaqtlariga mos bo'lsin (masalan post 09:00 da, taymer 08:00 da
+bo'lsa, post keyingi chaqiruvgacha kutib qoladi).
 
 Repo yopiq (private) bo'lsin: navbatdagi postlarni joylanmaguncha hech kim ko'rmasin.

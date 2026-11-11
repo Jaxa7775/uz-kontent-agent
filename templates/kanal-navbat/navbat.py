@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """navbat.py - navbatdagi postlarni vaqti kelganda Telegram kanalga joylaydi.
-GitHub Actions'da har soatda ishga tushadi (.github/workflows/navbat.yml).
+GitHub Actions'da ishga tushadi (.github/workflows/navbat.yml): asosan tashqi taymer (cron-job.org)
+post vaqtlarida chaqiradi, GitHub'ning o'z cron'i har soatda zaxira (u ishonchsiz, ba'zan soatlab o'tkazib yuboradi).
+Vaqtiga 5 daqiqadan kam qolgan post ham yuboriladi - taymer bir oz erta ishlasa post 3 soat kutib qolmasin.
 
     python3 navbat.py             # vaqti kelganlarni joylash
     python3 navbat.py --tekshir   # bot va kanalni tekshirish (hech narsa yubormaydi)
@@ -24,6 +26,7 @@ import datetime, importlib.util, json, os, shutil, sys
 
 ILDIZ = os.path.dirname(os.path.abspath(__file__))
 KECHIKISH = datetime.timedelta(hours=6)
+ERTA = datetime.timedelta(minutes=5)
 MAKS = 3
 
 
@@ -85,7 +88,7 @@ def ishla(ildiz=ILDIZ, hozir=None, joyla=None, token=None, kanal_std=None):
     postlar.sort(key=lambda p: (p[0], p[1]))
     yuborildi = 0
     for vaqt, nom, papka, m in postlar:
-        if vaqt > hozir:
+        if vaqt > hozir + ERTA:
             print(f".  {nom}: {vaqt.isoformat()} ni kutmoqda")
             continue
         if hozir - vaqt > KECHIKISH:
